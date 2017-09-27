@@ -1,0 +1,96 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'signing' //使用signing plugin做数字签名
+
+//定义GroupID和Version，ArtefactID会自动使用Project名
+group = 'com.yansong.ui'
+version = '0.1.0'
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:26.+'
+    testCompile 'junit:junit:4.12'
+}
+repositories {
+    mavenCentral();
+}
+
+artifacts {
+    archives file('base_ui.aar')
+}
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //为Pom文件做数字签名
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            //指定项目部署到的中央库地址，UserName和Password就是Part 1中注册的账号。
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: 'shanghai-android-deployer', password: '!@#$%^')
+            }
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: 'shanghai-android-deployer', password: '!@#$%^')
+            }
+
+            //构造项目的Pom文件，参见Part 2中Pom文件的规范，不要遗漏必填项
+            pom.project {
+                name project.name
+                packaging 'aar'
+                description 'Android开发常用整理'
+                url 'https://github.com/wangjiegulu/AndroidBucket'
+
+                scm {
+                    url 'scm:git@github.com:wangjiegulu/AndroidBucket.git'
+                    connection 'scm:git@github.com:wangjiegulu/AndroidBucket.git'
+                    developerConnection 'git@github.com:wangjiegulu/AndroidBucket.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'wangjie'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'wangjie'
+                        name 'Wagn Jie'
+                        email 'tiantian.china.2@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
